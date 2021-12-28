@@ -1,0 +1,207 @@
+{
+  "name": "bm-thingworx-vscode-debugger",
+  "displayName": "Thingworx VScode Debug",
+  "version": "0.1.0",
+  "publisher": "bogdanmihaiciuc",
+  "description": "Starter extension for developing debug adapters for VS Code.",
+  "author": {
+    "name": "Bogdan Mihaiciuc",
+    "email": "bmihaiciuc@iqnox.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "multi-root ready"
+  ],
+  "engines": {
+    "vscode": "^1.63.0"
+  },
+  "icon": "images/mock-debug-icon.png",
+  "categories": [
+    "Debuggers"
+  ],
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BogdanMihaiciuc/ThingworxVSCodeDebugger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BogdanMihaiciuc/ThingworxVSCodeDebugger/issues"
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --tsconfig=./tsconfig.json --external:vscode --format=cjs --platform=node --outfile=dist/extension.js",
+    "watch": "npm run -S esbuild-base -- --sourcemap --sources-content=false --watch",
+    "esbuild-web": "esbuild ./src/web-extension.ts --bundle --tsconfig=./tsconfig.json --external:vscode --format=cjs --platform=browser --outfile=dist/web-extension.js",
+    "watch-web": "npm run -S esbuild-web -- --sourcemap --sources-content=false --watch",
+    "build": "npm run -S esbuild-base -- --sourcemap --sources-content=false && npm run -S esbuild-web -- --sourcemap --sources-content=false",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "publish-pre-release": "vsce publish --pre-release",
+    "vscode:prepublish": "rimraf dist && npm run -S esbuild-base -- --minify"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^14.14.37",
+    "@types/request": "^2.48.7",
+    "@types/vscode": "^1.61.0",
+    "@types/ws": "^8.2.2",
+    "@typescript-eslint/eslint-plugin": "^5.2.0",
+    "@typescript-eslint/parser": "^5.2.0",
+    "await-notify": "1.0.1",
+    "esbuild": "^0.13.12",
+    "eslint": "^8.1.0",
+    "events": "^3.3.0",
+    "glob": "^7.2.0",
+    "mocha": "^9.1.3",
+    "path-browserify": "^1.0.1",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.4.4",
+    "url": "^0.11.0",
+    "vsce": "^2.5.1",
+    "vscode-debugadapter": "^1.51.0-pre.0",
+    "vscode-debugadapter-testsupport": "^1.51.0-pre.0"
+  },
+  "main": "./dist/extension.js",
+  "browser": "./dist/web-extension.js",
+  "activationEvents": [
+    "onDebugResolve:thingworx-vscode",
+    "onDebugDynamicConfigurations:thingworx-vscode",
+    "onCommand:extension.mock-debug.getProgramName",
+    "onCommand:extension.mock-debug.runEditorContents",
+    "onCommand:extension.mock-debug.debugEditorContents"
+  ],
+  "workspaceTrust": {
+    "request": "never"
+  },
+  "contributes": {
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "extension.mock-debug.runEditorContents",
+          "when": "resourceLangId == typescript",
+          "group": "navigation@1"
+        },
+        {
+          "command": "extension.mock-debug.debugEditorContents",
+          "when": "resourceLangId == typescript",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "extension.mock-debug.debugEditorContents",
+          "when": "resourceLangId == typescript"
+        },
+        {
+          "command": "extension.mock-debug.runEditorContents",
+          "when": "resourceLangId == typescript"
+        }
+      ],
+      "debug/variables/context": [
+        {
+          "command": "extension.mock-debug.toggleFormatting",
+          "when": "debugType == 'mock' && debugProtocolVariableMenuContext == 'simple'"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "extension.mock-debug.debugEditorContents",
+        "title": "Debug File",
+        "category": "Mock Debug",
+        "enablement": "!inDebugMode",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "extension.mock-debug.runEditorContents",
+        "title": "Run File",
+        "category": "Mock Debug",
+        "enablement": "!inDebugMode",
+        "icon": "$(play)"
+      },
+      {
+        "command": "extension.mock-debug.toggleFormatting",
+        "title": "Toggle between decimal and hex formatting"
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "typescript"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "thingworx-vscode",
+        "languages": [
+          "typescript"
+        ],
+        "label": "Thingworx VSCode",
+        "program": "./out/debugAdapter.js",
+        "runtime": "node",
+        "configurationAttributes": {
+          "attach": {
+            "required": [
+              "thingworxDomain", "thingworxPort", "thingworxAppKey", "useSSL"
+            ],
+            "properties": {
+              "thingworxDomain": {
+                "type": "string",
+                "description": "The domain of the thingworx server.",
+                "default": "localhost"
+              },
+              "thingworxPort": {
+                "type": "number",
+                "description": "The port of the thingworx server.",
+                "default": 8015
+              },
+              "thingworxAppKey": {
+                "type": "string",
+                "description": "The app key to use when authenticating.",
+                "default": "4dbe96fc-3678-40ca-b486-c64da76018dd"
+              },
+              "useSSL": {
+                "type": "boolean",
+                "description": "Whether SSL is configured for the thingworx server.",
+                "default": false
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "thingworx-vscode",
+            "request": "attach",
+            "name": "Attach to server",
+            "thingworxDomain": "localhost",
+            "thingworxPort": 8015,
+            "thingworxAppKey": "4dbe96fc-3678-40ca-b486-c64da76018dd",
+            "useSSL": false
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Thingworx VSCode: Attach",
+            "description": "A new configuration for debugging a Thingworx server containing a vscode debug project.",
+            "body": {
+              "type": "thingworx-vscode",
+              "request": "attach",
+              "name": "Ask for file name",
+              "program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
+              "stopOnEntry": true
+            }
+          }
+        ],
+        "variables": {
+          "AskForProgramName": "extension.mock-debug.getProgramName"
+        }
+      }
+    ]
+  },
+  "dependencies": {
+    "request": "^2.88.2",
+    "ws": "^8.3.0"
+  }
+}
