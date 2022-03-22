@@ -1,6 +1,6 @@
 # Thingworx VSCode Debugger
 
-This is a VSCode debug adapter created to allow debugging Typescript Thingworx projects created with [ThingworxVScodeProject](https://github.com/ptc-iot-sharing/ThingworxVSCodeProject) directly from within Visual Studio Code.
+This is a VSCode debug adapter created to allow debugging Typescript Thingworx projects created with [ThingworxVScodeProject](https://github.com/BogdanMihaiciuc/ThingworxVSCodeProject) directly from within Visual Studio Code.
 
 This has been created starting from [Mock Debugger](https://github.com/microsoft/vscode-mock-debug).
 
@@ -8,7 +8,7 @@ This has been created starting from [Mock Debugger](https://github.com/microsoft
 
 * Install the **ThingworxVSCodeDebugger** extension in VS Code.
 * Open a Typescript Thingworx project and create an appropriate attach configuration
-   * A sample configuration can be found at [here](https://github.com/ptc-iot-sharing/ThingworxVSCodeProject/blob/master/.vscode/launch.json).
+   * A sample configuration can be found at [here](https://github.com/BogdanMihaiciuc/ThingworxVSCodeProject/blob/master/.vscode/launch.json).
 * Select the debug environment "Attach to Thingworx" or however the attach configuration is named.
 * Press the green 'play' button to start debugging.
 * Set a breakpoint and launch any service either:
