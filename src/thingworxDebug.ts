@@ -22,6 +22,7 @@ import { Subject } from 'await-notify';
 import WebSocket from 'ws';
 import * as request from 'request';
 import { LogOutputEvent } from 'vscode-debugadapter/lib/logger';
+import * as path from 'path';
 
 /**
  * This interface describes the mock-debug specific launch attributes
@@ -339,7 +340,15 @@ export class ThingworxDebugSession extends LoggingDebugSession {
 
 	protected async setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): Promise<void> {
 		try {
-			const result = await this.invokeService('setBreakpointsForFile', {path: args.source.path, breakpoints: {breakpoints: args.breakpoints || []}});
+			// On windows, typescript reports paths using an uppercase drive letter, but the debugger reports them using
+			// a lowercase letter, which causes the debug server to not match any breakpoint locations
+			// Additionally, the debug entities use unix path delimiters, while the debugger uses windows delimiters
+			let path = args.source.path!;
+			if (process.platform == 'win32') {
+				path = path[0].toUpperCase() + path.substring(1).replace(/\\/g, '/');
+			}
+
+			const result = await this.invokeService('setBreakpointsForFile', {path, breakpoints: {breakpoints: args.breakpoints || []}});
 			response.body = response.body || { breakpoints: [] };
 			response.body.breakpoints = response.body.breakpoints || [];
 
@@ -366,7 +375,17 @@ export class ThingworxDebugSession extends LoggingDebugSession {
 	protected async breakpointLocationsRequest(response: DebugProtocol.BreakpointLocationsResponse, args: DebugProtocol.BreakpointLocationsArguments, request?: DebugProtocol.Request): Promise<void> {
 		if (args.source.path) {
 			try {
-				const locations = await this.invokeService('getBreakpointLocationsInFile', {path: args.source.path, line: args.line, column: args.column, endLine: args.endLine, endColumn: args.endColumn});
+				// On windows, typescript reports paths using an uppercase drive letter, but the debugger reports them using
+				// a lowercase letter, which causes the debug server to not match any breakpoint locations
+				// Additionally, the debug entities use unix path delimiters, while the debugger uses windows delimiters
+				let path = args.source.path!;
+				if (process.platform == 'win32') {
+					path = path[0].toUpperCase() + path.substring(1).replace(/\\/g, '/');
+				}
+
+				console.log(`Getting breakpoints at path ${path}`);
+
+				const locations = await this.invokeService('getBreakpointLocationsInFile', {path, line: args.line, column: args.column, endLine: args.endLine, endColumn: args.endColumn});
 
 				response.body = response.body || {};
 				response.body.breakpoints = response.body.breakpoints || [];
@@ -473,12 +492,12 @@ export class ThingworxDebugSession extends LoggingDebugSession {
 			response.body.stackFrames = response.body.stackFrames || [];
 
 			for (const row of frames.rows) {
-				const filename = row.source;
-				const filenameComponents = filename.split('/');
+				const filename = path.normalize(row.source);
+				const filenameComponents = filename.split(path.sep);
 				response.body.stackFrames.push(new StackFrame(
 					row.id,
 					row.name,
-					new Source(filenameComponents[filenameComponents.length - 1], row.source),
+					new Source(filenameComponents[filenameComponents.length - 1], filename),
 					row.line,
 					row.column
 				));
