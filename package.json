@@ -1,7 +1,7 @@
 {
   "name": "bm-thingworx-vscode-debugger",
   "displayName": "Thingworx VScode Debug",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "bogdanmihaiciuc",
   "description": "Starter extension for developing debug adapters for VS Code.",
   "author": {
