@@ -190,8 +190,24 @@ export class ThingworxDebugSession extends LoggingDebugSession {
 		response.body.exceptionBreakpointFilters = [
 			{
 				filter: 'exceptions',
-				label: "Exception",
+				label: "All Exceptions",
 				description: `Break when errors are thrown or when a function exits as a result of an error being thrown.`,
+				default: false,
+				supportsCondition: false,
+				conditionDescription: `Enter the exception's name`
+			},
+			{
+				filter: 'caughtExceptions',
+				label: "Caught Exceptions",
+				description: `Break when errors are thrown or when a function exits as a result of an error being thrown and that error is caught.`,
+				default: false,
+				supportsCondition: false,
+				conditionDescription: `Enter the exception's name`
+			},
+			{
+				filter: 'uncaughtExceptions',
+				label: "Uncaught Exceptions",
+				description: `Break when errors are thrown or when a function exits as a result of an error being thrown and that error is not caught.`,
 				default: false,
 				supportsCondition: false,
 				conditionDescription: `Enter the exception's name`
@@ -420,6 +436,8 @@ export class ThingworxDebugSession extends LoggingDebugSession {
 
 	protected async setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments): Promise<void> {
 		let exceptions = false;
+		let caughtExceptions = false;
+		let uncaughtExceptions = false;
 
 		if (args.filterOptions) {
 			for (const filterOption of args.filterOptions) {
@@ -427,12 +445,18 @@ export class ThingworxDebugSession extends LoggingDebugSession {
 					case 'exceptions':
 						exceptions = true;
 						break;
+					case 'caughtExceptions':
+						caughtExceptions = true;
+						break;
+					case 'uncaughtExceptions':
+						uncaughtExceptions = true;
+						break;
 				}
 			}
 		}
 
 		try {
-			await this.invokeService('setBreakOnExceptions', {breaks: exceptions});
+			await this.invokeService('setBreakOnExceptions', {breaks: exceptions, caughtExceptions, uncaughtExceptions});
 			this.sendResponse(response);
 		}
 		catch (e) {
